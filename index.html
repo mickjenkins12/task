@@ -31,7 +31,7 @@ const ICONS='task_tracker_icons';
 let taskList=JSON.parse(localStorage.getItem(STORAGE)||'[]');
 let customIcons=JSON.parse(localStorage.getItem(ICONS)||'[]');
 let selected='🧹';
-const defaults=['🧹','💊','🐶','📚'];
+const defaults=['🧹','💊','✍️','📚','🦺','😻','🤖','🚵‍♀️','🏕','🫦','🥙'];
 function save(){localStorage.setItem(STORAGE,JSON.stringify(taskList));}
 function renderIcons(){const p=document.getElementById('iconPicker');p.innerHTML='';defaults.forEach(i=>{const b=document.createElement('button');b.type='button';b.textContent=i;b.onclick=()=>selected=i;p.appendChild(b);});customIcons.forEach(src=>{const img=document.createElement('img');img.src=src;img.className='iconimg';img.onclick=()=>selected=src;p.appendChild(img);});}
 function fmt(ts){if(!ts)return 'Never completed';const mins=Math.floor((Date.now()-ts)/60000);const d=Math.floor(mins/1440);const h=Math.floor((mins%1440)/60);const m=mins%60;return `${String(d).padStart(2,'0')}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;}
