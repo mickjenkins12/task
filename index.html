@@ -1,0 +1,45 @@
+
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Task Tracker Fixed</title>
+<style>
+body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#f3f4f6}
+header{background:#2563eb;color:white;padding:16px}
+main{max-width:1200px;margin:auto;padding:16px}
+.card{background:white;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+input,button{padding:10px;margin:4px;border-radius:8px;border:1px solid #ccc}
+.task{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #e5e7eb}
+.cathead{font-size:2rem;font-weight:800;color:#2563eb;border-bottom:3px solid #2563eb;margin-top:20px}
+.name{font-size:1.5rem;font-weight:700}.timer{font-size:1.25rem;font-weight:700;color:#1d4ed8}
+.iconimg{width:40px;height:40px;object-fit:contain}.actions button{display:block;margin-bottom:6px}
+#iconPicker button{font-size:20px}
+@media(max-width:768px){.task{flex-direction:column}.actions button,input{width:100%;box-sizing:border-box}.name{font-size:1.7rem}.cathead{font-size:1.8rem}}
+</style></head><body>
+<header><h2>Task Tracker</h2></header>
+<main>
+<div class='card'>
+<input id='taskName' placeholder='Task name'>
+<input id='taskCategory' placeholder='Category'>
+<input id='iconUpload' type='file' accept='.png,.jpg,.jpeg,.svg,.webp' multiple>
+<div id='iconPicker'></div>
+<button onclick='addTask()'>Add Task</button>
+</div>
+<div class='card'><div id='taskContainer'></div></div>
+</main>
+<script>
+const STORAGE='task_tracker_fixed';
+const ICONS='task_tracker_icons';
+let taskList=JSON.parse(localStorage.getItem(STORAGE)||'[]');
+let customIcons=JSON.parse(localStorage.getItem(ICONS)||'[]');
+let selected='🧹';
+const defaults=['🧹','🧽','🪣','🏠','🌱','🔧','🚗','💊','🐶','📚'];
+function save(){localStorage.setItem(STORAGE,JSON.stringify(taskList));}
+function renderIcons(){const p=document.getElementById('iconPicker');p.innerHTML='';defaults.forEach(i=>{const b=document.createElement('button');b.type='button';b.textContent=i;b.onclick=()=>selected=i;p.appendChild(b);});customIcons.forEach(src=>{const img=document.createElement('img');img.src=src;img.className='iconimg';img.onclick=()=>selected=src;p.appendChild(img);});}
+function fmt(ts){if(!ts)return 'Never completed';const mins=Math.floor((Date.now()-ts)/60000);const d=Math.floor(mins/1440);const h=Math.floor((mins%1440)/60);const m=mins%60;return `${String(d).padStart(2,'0')}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;}
+document.getElementById('iconUpload').addEventListener('change',e=>{[...e.target.files].forEach(f=>{const r=new FileReader();r.onload=x=>{customIcons.push(x.target.result);localStorage.setItem(ICONS,JSON.stringify(customIcons));renderIcons();};r.readAsDataURL(f);});});
+function addTask(){const n=document.getElementById('taskName').value.trim();if(!n)return;taskList.push({id:Date.now(),name:n,category:document.getElementById('taskCategory').value.trim()||'General',icon:selected,last:null,history:[]});save();document.getElementById('taskName').value='';render();}
+function completeTask(id){const t=taskList.find(x=>x.id===id);if(!t)return;t.last=Date.now();t.history.unshift(new Date().toLocaleString());save();render();}
+function removeTask(id){taskList=taskList.filter(x=>x.id!==id);save();render();}
+function toggleHistory(id){const e=document.getElementById('h'+id);if(e)e.style.display=e.style.display==='none'?'block':'none';}
+function render(){const container=document.getElementById('taskContainer');const groups={};taskList.forEach(t=>{(groups[t.category]??=[]).push(t);});let out='';Object.keys(groups).sort().forEach(cat=>{out+=`<div class="cathead">${cat}</div>`;groups[cat].forEach(t=>{const icon=(typeof t.icon==='string'&&t.icon.startsWith('data:image'))?`<img class="iconimg" src="${t.icon}">`:`<span style="font-size:40px">${t.icon}</span>`;out+=`<div class="task"><div>${icon}<div class="name">${t.name}</div><div class="timer">${fmt(t.last)}</div><div id="h${t.id}" style="display:none">${t.history.map(h=>`<div>${h}</div>`).join('')||'No history'}</div></div><div class="actions"><button onclick="completeTask(${t.id})">Complete</button><button onclick="toggleHistory(${t.id})">History</button><button onclick="removeTask(${t.id})">Remove</button></div></div>`;});});container.innerHTML=out;}
+renderIcons();render();setInterval(render,60000);
+</script></body></html>
